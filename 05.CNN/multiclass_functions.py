@@ -95,7 +95,7 @@ def get_conf(model, test_DL):
       y_hat = model(x_batch)
       pred = y_hat.argmax(dim=1)
 
-      confusion += torch.bincount(N * y_batch + pred.cpu(), minlength=N**2).reshape(N,N)
+      confusion += torch.bincount(N * y_batch.cpu() + pred.cpu(), minlength=N**2).reshape(N,N)
 
   confusion = confusion.numpy()
   return confusion
