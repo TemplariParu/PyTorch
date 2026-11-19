@@ -119,7 +119,7 @@ def plot_confusion_matrix(confusion, classes=None):
                 )
   if classes is not None:
     plt.xticks(range(N), classes)
-    plt.xticks(range(N), classes)
+    plt.yticks(range(N), classes)
   else:
     plt.xticks(range(N))
     plt.yticks(range(N))
