@@ -173,4 +173,14 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+# Dataset
+data/
+
+# Python cache
+__pycache__/
+
+# Trained models
+*.pt
+*.pth
+
 # End of https://www.toptal.com/developers/gitignore/api/python
