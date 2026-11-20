@@ -2,6 +2,8 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # 학습
@@ -126,3 +128,57 @@ def plot_confusion_matrix(confusion, classes=None):
 
   plt.xlabel(f'Perdicted label \n accuracy = {accuracy:.1f} %')
   plt.ylabel('True label')
+
+# grad-CAM function
+
+def get_gradcam(model, image, model_type, target_class=None):
+
+    model.eval()
+
+    image = image.to(next(model.parameters()).device)
+    image = image.detach().requires_grad_(True)
+
+    # Convolution 연산
+    if model_type == 'CNN':
+      fm1 = model.conv1(image)
+      fm2 = model.conv2(model.maxpool1(fm1))
+      fm3 = model.conv3(model.maxpool2(fm2))
+    elif model_type == 'CNN_deep':
+      fm1 = model.conv_block1(image)
+      fm2 = model.conv_block2(model.maxpool1(fm1))
+      fm3 = model.conv_block3(model.maxpool2(fm2))
+
+    # Fully Connected Layer
+    x = model.maxpool3(fm3)
+    x = torch.flatten(x, start_dim=1)
+    logits = model.fc(x)
+
+    # 예측 클래스
+    pred_class = logits.argmax(dim=1).item()
+
+    if target_class is None:
+        target_class = pred_class
+
+    # 특정 클래스의 Logit
+    score = logits[0, target_class]
+
+    # Feature Map에 대한 Gradient 계산
+    gradients = torch.autograd.grad(score, fm3)[0]
+
+    # Gradient의 공간적 평균
+    weights = gradients.mean(
+        dim=(2, 3),
+        keepdim=True
+    )
+
+    # 채널별 중요도 반영
+    cam = (weights * fm3).sum(dim=1)
+
+    # 양의 기여도만 남김
+    cam = F.relu(cam)
+
+    # 0~1 정규화
+    cam = cam - cam.min()
+    cam = cam / (cam.max() + 1e-8)
+
+    return cam[0].detach().cpu()
