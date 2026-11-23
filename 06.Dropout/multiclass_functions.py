@@ -61,6 +61,26 @@ def Test(model, test_DL):
 
   return round(accuracy_e, 1)
 
+def Accuracy(model, dataloader, name):
+  model.eval()
+
+  with torch.no_grad():
+    rcorrect = 0
+    for  x_batch, y_batch in dataloader:
+      x, y = x_batch.to(DEVICE), y_batch.to(DEVICE)
+
+      y_hat = model(x)
+      pred = y_hat.argmax(dim=1)
+
+      correct_b = torch.sum(pred == y_batch).item()
+      rcorrect += correct_b
+
+    accuracy_e = rcorrect / len(dataloader.dataset) * 100
+    print(f'{name} Accuracy : {rcorrect} / {len(dataloader.dataset)} ({accuracy_e:.1f} %)')
+
+  return round(accuracy_e, 1)
+
+
 # 테스트 그래프
 def Test_plot(model, test_DL):
   model.eval()
